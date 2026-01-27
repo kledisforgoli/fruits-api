@@ -1,0 +1,20 @@
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin: 0;
+    flex-direction: column;
+}
+
+.nutrition p {
+    margin: 0;
+    line-height: 1.1;
+  }
+
+  #fruitResult {
+    text-align: left;
+    padding: 20px;
+  }
+  
