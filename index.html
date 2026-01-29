@@ -1,15 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sq">
+    
 <head>
-<link rel="stylesheet" href="styles.css" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Emri i Frutit:</title>
+  <link rel="stylesheet" href="styles.css" /> 
+  <link rel="stylesheet" href="variables.css" />  
+
+  <title>Kerko frutin</title>
 </head>
+
 <body>
-  <h2>Emri i Frutit:</h2>
-  <input type="text" id="fruitInput" placeholder="Emri i frutit:">
-  <div id="fruitResult"></div>
+  <div class="container">
+    <header>
+      <h1>Kerko frutin</h1>
+    </header>
+
+    <div class="search-box">
+      <input 
+        type="text" 
+        id="fruitInput" 
+        placeholder="Shkruaj emrin e frutit"
+        autocomplete="off"
+      >
+    </div>
+
+    <div id="fruitResult"></div>
+  </div>
 
   <script src="script.js"></script>
 </body>

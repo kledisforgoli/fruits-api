@@ -1,66 +1,113 @@
-var input = document.getElementById("fruitInput");
-var result = document.getElementById("fruitResult");
+const input = document.getElementById("fruitInput");
+const result = document.getElementById("fruitResult");
 
-input.addEventListener("input", function () {
-  searchFruit(input.value);
+const url = "https://fruityvice.com/api/fruit/all";
+const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
+
+let cachedFruits = null;
+let lastQuery = "";
+
+input.addEventListener("input", () => {
+   const q = input.value.trim();
+   lastQuery = q;
+   debounceSearch(q);
 });
 
-function searchFruit(text) {
+let t = null;
 
-  if (text === "") {
-    result.innerHTML = "";
-    return;
-  }
+function debounceSearch(q) {
+   clearTimeout(t);
+   t = setTimeout(() => searchFruit(q), 300);
+}
 
-  var url = "https://fruityvice.com/api/fruit/all";
-  var proxy =
-    "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
+async function getAllFruits() {
+   if (cachedFruits) return cachedFruits;
 
-  fetch(proxy)
-    .then(function (response) {
-      return response.json();
-    })
-    .then(function (data) {
+   const response = await fetch(proxy);
+   if (!response.ok) throw new Error("Error");
 
-      var fruits = JSON.parse(data.contents);
-      var found = false;
-      var html = "";
+   const data = await response.json();
+   cachedFruits = JSON.parse(data.contents);
+   return cachedFruits;
+}
 
-      for (var i = 0; i < fruits.length; i++) {
+function clearResult() {
+   result.replaceChildren();
+}
 
-        var search = text.toLowerCase();
+function makeLine(label, value) {
+   const p = document.createElement("p");
+   const strong = document.createElement("strong");
+   strong.textContent = `${label}: `;
+   p.appendChild(strong);
+   p.appendChild(document.createTextNode(value ?? ""));
+   return p;
+}
 
-        if (
-          fruits[i].name.toLowerCase() === search ||
-          fruits[i].family.toLowerCase() === search ||
-          fruits[i].order.toLowerCase() === search ||
-          fruits[i].genus.toLowerCase() === search
-        ) {
+function renderFruitCard(fruit) {
+   const card = document.createElement("div");
+   card.className = "fruit-card"
 
-          found = true;
+   card.appendChild(makeLine("Name", fruit.name));
+   card.appendChild(makeLine("Family", fruit.family));
+   card.appendChild(makeLine("Order", fruit.order));
+   card.appendChild(makeLine("Genus", fruit.genus));
 
-          html += "<strong>Name:</strong> " + fruits[i].name + "<br>";
-          html += "<strong>Family:</strong> " + fruits[i].family + "<br>";
-          html += "<strong>Order:</strong> " + fruits[i].order + "<br>";
-          html += "<strong>Genus:</strong> " + fruits[i].genus + "<br>";
-          html += "<strong>Nutrition:</strong><br>";
+   const nutritionTitle = document.createElement("p");
+   const nutritionStrong = document.createElement("strong");
+   nutritionStrong.textContent = "Nutrition:";
+   nutritionTitle.appendChild(nutritionStrong);
+   card.appendChild(nutritionTitle);
 
-          html += "Calories: " + fruits[i].nutritions.calories + "<br>";
-          html += "Sugar: " + fruits[i].nutritions.sugar + "<br>";
-          html += "Carbohydrates: " + fruits[i].nutritions.carbohydrates + "<br>";
-          html += "Protein: " + fruits[i].nutritions.protein + "<br>";
-          html += "Fat: " + fruits[i].nutritions.fat + "<br><hr>";
-        }
+   const n = fruit.nutritions || {};
+   card.appendChild(makeLine("Calories", String(n.calories ?? "")));
+   card.appendChild(makeLine("Sugar", String(n.sugar ?? "")));
+   card.appendChild(makeLine("Carbohydrates", String(n.carbohydrates ?? "")));
+   card.appendChild(makeLine("Protein", String(n.protein ?? "")));
+   card.appendChild(makeLine("Fat", String(n.fat ?? "")));
+
+   return card;
+}
+
+async function searchFruit(text) {
+   clearResult();
+
+   if (!text) return;
+
+   try {
+      const fruits = await getAllFruits();
+
+      if (text !== lastQuery) return;
+
+      const search = text.toLowerCase();
+
+      const matches = fruits.filter((f) => {
+         return (
+            f.name?.toLowerCase().includes(search) ||
+            f.family?.toLowerCase() === search ||
+            f.order?.toLowerCase() === search ||
+            f.genus?.toLowerCase() === search
+         );
+      });
+
+      clearResult();
+
+      if (matches.length === 0) {
+         const p = document.createElement("p");
+         p.textContent = "Nuk u gjet fruti";
+         result.appendChild(p);
+         return;
       }
 
-      if (found === false) {
-        result.innerHTML = "Nuk u gjet fruti";
-      } else {
-        result.innerHTML = html;
-      }
-
-    })
-    .catch(function () {
-      result.innerHTML = "Error";
-    });
+      const fragment = document.createDocumentFragment();
+      matches.forEach((fruit) => fragment.appendChild(renderFruitCard(fruit)));
+      result.appendChild(fragment);
+      
+   } catch (err) {
+      clearResult();
+      const p = document.createElement("p");
+      p.textContent = "Error";
+      result.appendChild(p);
+      console.error(err);
+   }
 }
