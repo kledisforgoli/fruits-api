@@ -109,6 +109,7 @@ h1 {
   border-left: var(--border-width-lg) solid var(--primary);
   transition: all var(--transition-fast) ease;
   animation: slideIn var(--transition-fast) ease-out;
+  margin-top: var(--spacing-sm);
 }
 
 @keyframes slideIn {
