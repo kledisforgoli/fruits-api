@@ -1,11 +1,34 @@
 const input = document.getElementById("fruitInput");
 const result = document.getElementById("fruitResult");
+const filterBtn = document.getElementById("filterBtn");
+const filterPanel = document.getElementById("filterPanel");
+const andMode = document.getElementById("andMode");
+const orMode = document.getElementById("orMode");
 
 const url = "https://fruityvice.com/api/fruit/all";
 const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
 
 let cachedFruits = null;
 let lastQuery = "";
+
+
+filterBtn.addEventListener("click", () => {
+   filterPanel.classList.toggle("hidden");
+   filterBtn.classList.toggle("active");
+});
+
+
+andMode.addEventListener("change", () => {
+   if (input.value.trim()) {
+      searchFruit(input.value.trim());
+   }
+});
+
+orMode.addEventListener("change", () => {
+   if (input.value.trim()) {
+      searchFruit(input.value.trim());
+   }
+});
 
 input.addEventListener("input", () => {
    const q = input.value.trim();
@@ -69,6 +92,50 @@ function renderFruitCard(fruit) {
    return card;
 }
 
+function parseSearchTerms(text) {
+   let mode;
+   let terms = [];
+   
+   if (text.includes('&&')) {
+      mode = 'AND';
+      terms = text.split('&&').map(t => t.trim()).filter(t => t);
+   } else if (text.includes('||')) {
+      mode = 'OR';
+      terms = text.split('||').map(t => t.trim()).filter(t => t);
+   } else {
+      mode = andMode.checked ? 'AND' : 'OR';
+      terms = text.split(/\s+/).map(t => t.trim()).filter(t => t);
+   }
+   
+   return { mode, terms };
+}
+
+function fruitMatchesTerm(fruit, term) {
+   const search = term.toLowerCase();
+   return (
+      fruit.name?.toLowerCase().includes(search) ||
+      fruit.family?.toLowerCase().includes(search) ||
+      fruit.order?.toLowerCase().includes(search) ||
+      fruit.genus?.toLowerCase().includes(search)
+   );
+}
+
+function filterFruits(fruits, searchConfig) {
+   const { mode, terms } = searchConfig;
+   
+   if (terms.length === 0) return [];
+   
+   if (mode === 'AND') {
+      return fruits.filter(fruit => {
+         return terms.every(term => fruitMatchesTerm(fruit, term));
+      });
+   } else {
+      return fruits.filter(fruit => {
+         return terms.some(term => fruitMatchesTerm(fruit, term));
+      });
+   }
+}
+
 async function searchFruit(text) {
    clearResult();
 
@@ -79,16 +146,8 @@ async function searchFruit(text) {
 
       if (text !== lastQuery) return;
 
-      const search = text.toLowerCase();
-
-      const matches = fruits.filter((f) => {
-         return (
-            f.name?.toLowerCase().includes(search) ||
-            f.family?.toLowerCase() === search ||
-            f.order?.toLowerCase() === search ||
-            f.genus?.toLowerCase() === search
-         );
-      });
+      const searchConfig = parseSearchTerms(text);
+      const matches = filterFruits(fruits, searchConfig);
 
       clearResult();
 

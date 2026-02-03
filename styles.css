@@ -69,12 +69,139 @@ h1 {
 
 #fruitInput:focus {
   border-color: var(--primary);
-  background: white;
+  background: var(--card-bg);
   box-shadow: var(--shadow-sm);
 }
 
 #fruitInput::placeholder {
   color: var(--text-light);
+}
+
+.filter-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-md);
+  width: var(--spacing-2xl);
+  height: var(--spacing-2xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+  color: white;
+}
+
+.filter-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.filter-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.filter-btn.active {
+  background: var(--primary-dark);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+.filter-panel {
+  background: var(--card-bg);
+  border: var(--border-width-md) solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast) ease;
+  overflow: hidden;
+  max-height: 500px;
+}
+
+.filter-panel.hidden {
+  max-height: 0;
+  padding: 0;
+  margin-bottom: 0;
+  border-width: 0;
+  opacity: 0;
+}
+
+.filter-content h3 {
+  color: var(--text-dark);
+  font-size: var(--font-lg);
+  margin-bottom: var(--spacing-md);
+  font-weight: var(--font-weight-semibold);
+  margin-left: var(--spacing-md);
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.radio-label {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast) ease;
+  border: var(--border-width-md) solid transparent;
+}
+
+.radio-label:hover {
+  background: rgba(102, 126, 234, 0.05);
+  border-color: var(--primary);
+}
+
+.radio-label input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.radio-custom {
+  width: var(--spacing-lg);
+  height: var(--spacing-lg);
+  border: var(--border-width-md) solid var(--border);
+  border-radius: 50%;
+  margin-right: var(--spacing-sm);
+  position: relative;
+  flex-shrink: 0;
+  transition: all var(--transition-fast) ease;
+  margin-top: 2px;
+}
+
+.radio-label input[type="radio"]:checked + .radio-custom {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.radio-label input[type="radio"]:checked + .radio-custom::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+}
+
+.radio-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.radio-text strong {
+  color: var(--text-dark);
+  font-size: var(--font-base);
 }
 
 #fruitResult {
@@ -182,10 +309,6 @@ h1 {
     font-size: var(--font-2xl);
   }
 
-  .subtitle {
-    font-size: var(--font-sm);
-  }
-
   #fruitInput {
     padding: var(--input-padding-y-mobile) var(--input-padding-x-right-mobile)
       var(--input-padding-y-mobile) var(--input-padding-x-left-mobile);
@@ -198,6 +321,19 @@ h1 {
 
   #fruitResult {
     max-height: var(--result-max-height-mobile);
+  }
+
+  .filter-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .radio-label {
+    padding: var(--spacing-sm);
+  }
+
+  .radio-text strong {
+    font-size: var(--font-sm);
   }
 }
 

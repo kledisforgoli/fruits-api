@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css" /> 
   <link rel="stylesheet" href="variables.css" />  
+  <link rel="stylesheet" href="styles.css" /> 
 
   <title>Kerko frutin</title>
 </head>
@@ -20,9 +20,35 @@
       <input 
         type="text" 
         id="fruitInput" 
-        placeholder="Shkruaj emrin e frutit"
+        placeholder="Kerko"
         autocomplete="off"
       >
+      <button id="filterBtn" class="filter-btn" title="Cilësimet e filtrit">
+        <p>🔍︎</p>
+      </button>
+    </div>
+
+    <div id="filterPanel" class="filter-panel hidden">
+      <div class="filter-content">
+        <h3>Menyra e kerkimit</h3>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="searchMode" value="AND" id="andMode">
+            <span class="radio-custom"></span>
+            <span class="radio-text">
+              <strong>AND (&&)</strong>
+            </span>
+          </label>
+          
+          <label class="radio-label">
+            <input type="radio" name="searchMode" value="OR" id="orMode" checked>
+            <span class="radio-custom"></span>
+            <span class="radio-text">
+              <strong>OR (||)</strong>
+            </span>
+          </label>
+        </div>
+      </div>
     </div>
 
     <div id="fruitResult"></div>
