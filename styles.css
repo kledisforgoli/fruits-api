@@ -92,7 +92,7 @@ h1 {
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-fast) ease;
-  color: white;
+  color: var(--white-color);
 }
 
 .filter-btn:hover {
@@ -189,7 +189,7 @@ h1 {
   transform: translate(-50%, -50%);
   width: 8px;
   height: 8px;
-  background: white;
+  background: var(--card-bg);
   border-radius: 50%;
 }
 
