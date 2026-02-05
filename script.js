@@ -95,23 +95,78 @@ function renderFruitCard(fruit) {
 function parseSearchTerms(text) {
    let mode;
    let terms = [];
-   
+
    if (text.includes('&&')) {
       mode = 'AND';
       terms = text.split('&&').map(t => t.trim()).filter(t => t);
+      andMode.checked = true;
    } else if (text.includes('||')) {
       mode = 'OR';
       terms = text.split('||').map(t => t.trim()).filter(t => t);
+      orMode.checked = true;
    } else {
       mode = andMode.checked ? 'AND' : 'OR';
-      terms = text.split(/\s+/).map(t => t.trim()).filter(t => t);
+
+      if (text.includes(':') || text.match(/starts\s+with/i)) {
+         terms = [text];
+      } else {
+         terms = text.split(/\s+/).map(t => t.trim()).filter(t => t);
+      }
    }
-   
-   return { mode, terms };
+
+   return {
+      mode,
+      terms
+   };
 }
 
 function fruitMatchesTerm(fruit, term) {
-   const search = term.toLowerCase();
+   const trimmedTerm = term.trim();
+
+
+   const propertyMatch = trimmedTerm.match(/^(\w+)\s*:\s*(.+)$/);
+   if (propertyMatch) {
+      const property = propertyMatch[1].toLowerCase();
+      const value = propertyMatch[2].trim();
+
+
+      let propValue = '';
+      if (property === 'calories' || property === 'sugar' ||
+         property === 'carbohydrates' || property === 'protein' ||
+         property === 'fat') {
+         propValue = fruit.nutritions?.[property]?.toString().toLowerCase() || '';
+      } else if (property === 'name') {
+         propValue = fruit.name?.toLowerCase() || '';
+      } else if (property === 'family') {
+         propValue = fruit.family?.toLowerCase() || '';
+      } else if (property === 'order') {
+         propValue = fruit.order?.toLowerCase() || '';
+      } else if (property === 'genus') {
+         propValue = fruit.genus?.toLowerCase() || '';
+      }
+
+
+      const startsWithMatch = value.match(/^starts\s+with\s+(.+)$/i);
+      if (startsWithMatch) {
+         const searchValue = startsWithMatch[1].trim().toLowerCase();
+         return propValue.startsWith(searchValue);
+      }
+
+      return propValue.includes(value.toLowerCase());
+   }
+
+   const startsWithMatch = trimmedTerm.match(/^starts\s+with\s+(.+)$/i);
+   if (startsWithMatch) {
+      const searchValue = startsWithMatch[1].trim().toLowerCase();
+      return (
+         fruit.name?.toLowerCase().startsWith(searchValue) ||
+         fruit.family?.toLowerCase().startsWith(searchValue) ||
+         fruit.order?.toLowerCase().startsWith(searchValue) ||
+         fruit.genus?.toLowerCase().startsWith(searchValue)
+      );
+   }
+
+   const search = trimmedTerm.toLowerCase();
    return (
       fruit.name?.toLowerCase().includes(search) ||
       fruit.family?.toLowerCase().includes(search) ||
@@ -121,10 +176,13 @@ function fruitMatchesTerm(fruit, term) {
 }
 
 function filterFruits(fruits, searchConfig) {
-   const { mode, terms } = searchConfig;
-   
+   const {
+      mode,
+      terms
+   } = searchConfig;
+
    if (terms.length === 0) return [];
-   
+
    if (mode === 'AND') {
       return fruits.filter(fruit => {
          return terms.every(term => fruitMatchesTerm(fruit, term));
@@ -161,7 +219,7 @@ async function searchFruit(text) {
       const fragment = document.createDocumentFragment();
       matches.forEach((fruit) => fragment.appendChild(renderFruitCard(fruit)));
       result.appendChild(fragment);
-      
+
    } catch (err) {
       clearResult();
       const p = document.createElement("p");

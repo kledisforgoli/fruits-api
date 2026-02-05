@@ -182,7 +182,7 @@ h1 {
 }
 
 .radio-label input[type="radio"]:checked + .radio-custom::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -196,7 +196,7 @@ h1 {
 .radio-text {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .radio-text strong {
@@ -208,6 +208,8 @@ h1 {
   max-height: var(--result-max-height);
   overflow-y: auto;
   padding-right: var(--spacing-sm);
+  scrollbar-gutter: stable;
+  padding-top: var(--spacing-xs);
 }
 
 #fruitResult::-webkit-scrollbar {
@@ -217,6 +219,8 @@ h1 {
 #fruitResult::-webkit-scrollbar-track {
   background: var(--background);
   border-radius: var(--radius-sm);
+  margin-top: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
 }
 
 #fruitResult::-webkit-scrollbar-thumb {
@@ -236,7 +240,7 @@ h1 {
   border-left: var(--border-width-lg) solid var(--primary);
   transition: all var(--transition-fast) ease;
   animation: slideIn var(--transition-fast) ease-out;
-  margin-top: var(--spacing-sm);
+  /* margin-top: var(--spacing-sm); */
 }
 
 @keyframes slideIn {
@@ -324,8 +328,8 @@ h1 {
   }
 
   .filter-btn {
-    width: 36px;
-    height: 36px;
+    width: var(--spacing-xl);
+    height: var(--spacing-xl);
   }
 
   .radio-label {
