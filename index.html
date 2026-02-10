@@ -13,41 +13,14 @@
         <h1>Kerko frutin</h1>
       </header>
       <div class="search-box">
-        <input
-          type="text"
-          id="fruitInput"
-          placeholder="Kerko"
-          autocomplete="off"
-        />
-        <button id="filterBtn" class="filter-btn" title="Cilësimet e filtrit">
-          <p>🔍︎</p>
-        </button>
-      </div>
-      <div id="filterPanel" class="filter-panel hidden">
-        <div class="filter-content">
-          <h3>Menyra e kerkimit</h3>
-          <div class="radio-group">
-            <label class="radio-label">
-              <input type="radio" name="searchMode" value="AND" id="andMode" />
-              <span class="radio-custom"></span>
-              <span class="radio-text">
-                <strong>AND (&&)</strong>
-              </span>
-            </label>
-            <label class="radio-label">
-              <input
-                type="radio"
-                name="searchMode"
-                value="OR"
-                id="orMode"
-                checked
-              />
-              <span class="radio-custom"></span>
-              <span class="radio-text">
-                <strong>OR (||)</strong>
-              </span>
-            </label>
-          </div>
+        <div class="search-input-wrapper">
+          <div id="tagsContainer" class="tags-container"></div>
+          <input
+            type="text"
+            id="fruitInput"
+            placeholder="Kerko"
+            autocomplete="off"
+          />
         </div>
       </div>
       <div id="fruitResult"></div>

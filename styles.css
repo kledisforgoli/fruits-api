@@ -54,154 +54,102 @@ h1 {
   margin-bottom: var(--spacing-xl);
 }
 
-#fruitInput {
+.search-input-wrapper {
+  position: relative;
   width: 100%;
-  padding: var(--input-padding-y) var(--input-padding-x-right)
-    var(--input-padding-y) var(--input-padding-x-left);
-  font-size: var(--font-md);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  min-height: 52px;
+  padding: var(--spacing-sm) var(--spacing-md);
   border: var(--border-width-md) solid var(--border);
   border-radius: var(--radius-full);
-  outline: none;
-  transition: all var(--transition-fast) ease;
   background: var(--background);
-  font-family: inherit;
+  transition: all var(--transition-fast) ease;
 }
 
-#fruitInput:focus {
+.search-input-wrapper:focus-within {
   border-color: var(--primary);
   background: var(--card-bg);
   box-shadow: var(--shadow-sm);
 }
 
-#fruitInput::placeholder {
-  color: var(--text-light);
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  align-items: center;
 }
 
-.filter-btn {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+.tags-container:empty {
+  display: none;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
   background: var(--primary);
+  color: var(--white-color);
+  padding: 4px var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-size: var(--font-sm);
+  font-weight: var(--font-weight-semibold);
+  animation: tagSlideIn var(--transition-fast) ease-out;
+  white-space: nowrap;
+}
+
+@keyframes tagSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.tag-remove {
+  background: none;
   border: none;
-  border-radius: var(--radius-md);
-  width: var(--spacing-2xl);
-  height: var(--spacing-2xl);
+  color: var(--white-color);
+  cursor: pointer;
+  font-size: var(--font-lg);
+  line-height: 1;
+  padding: 0;
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all var(--transition-fast) ease;
-  color: var(--white-color);
-}
-
-.filter-btn:hover {
-  background: var(--primary-dark);
-  transform: translateY(-50%) scale(1.05);
-}
-
-.filter-btn:active {
-  transform: translateY(-50%) scale(0.95);
-}
-
-.filter-btn.active {
-  background: var(--primary-dark);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
-}
-
-.filter-panel {
-  background: var(--card-bg);
-  border: var(--border-width-md) solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition-fast) ease;
-  overflow: hidden;
-  max-height: 500px;
-}
-
-.filter-panel.hidden {
-  max-height: 0;
-  padding: 0;
-  margin-bottom: 0;
-  border-width: 0;
-  opacity: 0;
-}
-
-.filter-content h3 {
-  color: var(--text-dark);
-  font-size: var(--font-lg);
-  margin-bottom: var(--spacing-md);
-  font-weight: var(--font-weight-semibold);
-  margin-left: var(--spacing-md);
-}
-
-.radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.radio-label {
-  display: flex;
-  align-items: flex-start;
-  cursor: pointer;
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast) ease;
-  border: var(--border-width-md) solid transparent;
-}
-
-.radio-label:hover {
-  background: rgba(102, 126, 234, 0.05);
-  border-color: var(--primary);
-}
-
-.radio-label input[type="radio"] {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.radio-custom {
-  width: var(--spacing-lg);
-  height: var(--spacing-lg);
-  border: var(--border-width-md) solid var(--border);
   border-radius: 50%;
-  margin-right: var(--spacing-sm);
-  position: relative;
-  flex-shrink: 0;
   transition: all var(--transition-fast) ease;
-  margin-top: 2px;
 }
 
-.radio-label input[type="radio"]:checked + .radio-custom {
-  border-color: var(--primary);
-  background: var(--primary);
+.tag-remove:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
 }
 
-.radio-label input[type="radio"]:checked + .radio-custom::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 8px;
-  height: 8px;
-  background: var(--card-bg);
-  border-radius: 50%;
+.tag-remove:active {
+  transform: scale(0.9);
 }
 
-.radio-text {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+#fruitInput {
+  flex: 1;
+  min-width: 120px;
+  padding: var(--spacing-xs) 0;
+  font-size: var(--font-md);
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
 }
 
-.radio-text strong {
-  color: var(--text-dark);
-  font-size: var(--font-base);
+#fruitInput::placeholder {
+  color: var(--text-light);
 }
 
 #fruitResult {
@@ -240,7 +188,6 @@ h1 {
   border-left: var(--border-width-lg) solid var(--primary);
   transition: all var(--transition-fast) ease;
   animation: slideIn var(--transition-fast) ease-out;
-  /* margin-top: var(--spacing-sm); */
 }
 
 @keyframes slideIn {
@@ -288,10 +235,6 @@ h1 {
   font-style: italic;
 }
 
-#fruitResult > p:first-child:last-child {
-  animation: pulse var(--transition-slow) infinite;
-}
-
 @keyframes pulse {
   0%,
   100% {
@@ -313,10 +256,14 @@ h1 {
     font-size: var(--font-2xl);
   }
 
+  .search-input-wrapper {
+    min-height: 46px;
+    padding: var(--spacing-sm);
+  }
+
   #fruitInput {
-    padding: var(--input-padding-y-mobile) var(--input-padding-x-right-mobile)
-      var(--input-padding-y-mobile) var(--input-padding-x-left-mobile);
     font-size: var(--font-base);
+    min-width: 100px;
   }
 
   .fruit-card {
@@ -327,17 +274,9 @@ h1 {
     max-height: var(--result-max-height-mobile);
   }
 
-  .filter-btn {
-    width: var(--spacing-xl);
-    height: var(--spacing-xl);
-  }
-
-  .radio-label {
-    padding: var(--spacing-sm);
-  }
-
-  .radio-text strong {
-    font-size: var(--font-sm);
+  .tag {
+    font-size: 0.85rem;
+    padding: 3px var(--spacing-sm);
   }
 }
 
@@ -353,4 +292,28 @@ h1 {
   .fruit-card p {
     font-size: var(--font-sm);
   }
+}
+
+.tag-space {
+   display: inline-block;
+   width: 8px;
+   height: 30px;
+   cursor: text;
+   position: relative;
+}
+
+.tag-space.active-cursor::before {
+   content: '';
+   position: absolute;
+   /* left: 13px;
+   top: 5px;
+   bottom: 5px;
+   width: 1px;
+   background-color: #000000;
+   animation: blink 1s infinite; */
+}
+
+@keyframes blink {
+   0%, 49% { opacity: 1; }
+   50%, 100% { opacity: 0; }
 }
