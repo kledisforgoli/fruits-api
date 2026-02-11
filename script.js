@@ -8,40 +8,20 @@ const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
 let cachedFruits = null;
 let lastQuery = "";
 let tags = [];
-let searchMode = 'OR';
-let cursorPosition = null;
 
-function addTag(text, position = null) {
+function addTag(text) {
    const trimmed = text.trim();
    if (!trimmed) return;
    
    if (tags.includes(trimmed)) return;
 
-   if (position !== null && position >= 0 && position <= tags.length) {
-      tags.splice(position, 0, trimmed);
-      cursorPosition = position + 1;
-   } else {
-      tags.push(trimmed);
-      cursorPosition = tags.length;
-   }
-   
+   tags.push(trimmed);
    renderTags();
    performSearch();
 }
 
 function removeTag(index) {
    tags.splice(index, 1);
-   
-
-   if (cursorPosition !== null) {
-      if (cursorPosition > index) {
-         cursorPosition--;
-      }
-      if (cursorPosition > tags.length) {
-         cursorPosition = tags.length;
-      }
-   }
-   
    renderTags();
    performSearch();
 }
@@ -49,7 +29,6 @@ function removeTag(index) {
 function editTag(index) {
    const tagText = tags[index];
    tags.splice(index, 1);
-   cursorPosition = index;
    input.value = tagText;
    input.focus();
    renderTags();
@@ -59,19 +38,6 @@ function renderTags() {
    tagsContainer.innerHTML = '';
    
    tags.forEach((tagText, index) => {
-
-      const spaceBefore = document.createElement('div');
-      spaceBefore.className = 'tag-space';
-      spaceBefore.onclick = () => {
-         cursorPosition = index;
-         input.focus();
-         renderTags();
-      };
-      if (cursorPosition === index) {
-         spaceBefore.classList.add('active-cursor');
-      }
-      tagsContainer.appendChild(spaceBefore);
-      
       const tag = document.createElement('div');
       tag.className = 'tag';
       
@@ -88,19 +54,6 @@ function renderTags() {
       tag.appendChild(removeBtn);
       tagsContainer.appendChild(tag);
    });
-   
-
-   const spaceAfter = document.createElement('div');
-   spaceAfter.className = 'tag-space';
-   spaceAfter.onclick = () => {
-      cursorPosition = tags.length;
-      input.focus();
-      renderTags();
-   };
-   if (cursorPosition === tags.length) {
-      spaceAfter.classList.add('active-cursor');
-   }
-   tagsContainer.appendChild(spaceAfter);
 }
 
 input.addEventListener("keydown", (e) => {
@@ -108,26 +61,14 @@ input.addEventListener("keydown", (e) => {
       e.preventDefault();
       const value = input.value.trim();
       if (value) {
-         const insertPos = cursorPosition !== null ? cursorPosition : tags.length;
-         addTag(value, insertPos);
+         addTag(value);
          input.value = '';
       }
    } else if (e.key === 'Backspace' && input.value === '' && tags.length > 0) {
       e.preventDefault();
-      const deletePos = cursorPosition !== null && cursorPosition > 0 
-         ? cursorPosition - 1 
-         : tags.length - 1;
-      const lastTag = tags[deletePos];
-      removeTag(deletePos);
+      const lastTag = tags[tags.length - 1];
+      removeTag(tags.length - 1);
       input.value = lastTag;
-   } else if (e.key === 'ArrowLeft' && input.value === '' && cursorPosition !== null && cursorPosition > 0) {
-      e.preventDefault();
-      cursorPosition--;
-      renderTags();
-   } else if (e.key === 'ArrowRight' && input.value === '' && cursorPosition !== null && cursorPosition < tags.length) {
-      e.preventDefault();
-      cursorPosition++;
-      renderTags();
    }
 });
 
@@ -138,21 +79,6 @@ input.addEventListener("input", () => {
    if (tags.length === 0) {
       debounceSearch(q);
    }
-});
-
-input.addEventListener("focus", () => {
-   if (cursorPosition === null) {
-      cursorPosition = tags.length;
-   }
-   renderTags();
-});
-
-input.addEventListener("blur", () => {
-   setTimeout(() => {
-      if (document.activeElement !== input) {
-         renderTags();
-      }
-   }, 200);
 });
 
 let t = null;
@@ -280,7 +206,6 @@ function fruitMatchesTerm(fruit, term) {
       );
    }
 
-
    const search = trimmedTerm.toLowerCase();
    return (
       fruit.name?.toLowerCase().includes(search) ||
@@ -323,11 +248,9 @@ function performSearch() {
    
    if (hasAndOperator) {
       effectiveMode = 'AND';
-
       searchTerms = tags.filter(tag => tag !== '&&');
    } else if (hasOrOperator) {
       effectiveMode = 'OR';
-
       searchTerms = tags.filter(tag => tag !== '||');
    } else {
       effectiveMode = 'OR';
@@ -385,6 +308,7 @@ async function searchFruit(text) {
       const fruits = await getAllFruits();
 
       if (tags.length > 0) {
+         return;
       } else if (text !== lastQuery) {
          return;
       }

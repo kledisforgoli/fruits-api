@@ -294,7 +294,7 @@ h1 {
   }
 }
 
-.tag-space {
+/* .tag-space {
    display: inline-block;
    width: 8px;
    height: 30px;
@@ -305,15 +305,15 @@ h1 {
 .tag-space.active-cursor::before {
    content: '';
    position: absolute;
-   /* left: 13px;
+   left: 13px;
    top: 5px;
    bottom: 5px;
    width: 1px;
    background-color: #000000;
-   animation: blink 1s infinite; */
+   animation: blink 1s infinite;
 }
 
 @keyframes blink {
    0%, 49% { opacity: 1; }
    50%, 100% { opacity: 0; }
-}
+} */
