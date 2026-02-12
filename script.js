@@ -9,10 +9,35 @@ let cachedFruits = null;
 let lastQuery = "";
 let tags = [];
 
+
+window.addEventListener('DOMContentLoaded', () => {
+   showAllFruits();
+});
+
+async function showAllFruits() {
+   clearResult();
+
+   try {
+      const fruits = await getAllFruits();
+
+      result.classList.add('grid-view');
+
+      const fragment = document.createDocumentFragment();
+      fruits.forEach((fruit) => fragment.appendChild(renderFruitCard(fruit)));
+      result.appendChild(fragment);
+   } catch (err) {
+      clearResult();
+      const p = document.createElement("p");
+      p.textContent = "Error";
+      result.appendChild(p);
+      console.error(err);
+   }
+}
+
 function addTag(text) {
    const trimmed = text.trim();
    if (!trimmed) return;
-   
+
    if (tags.includes(trimmed)) return;
 
    tags.push(trimmed);
@@ -23,7 +48,12 @@ function addTag(text) {
 function removeTag(index) {
    tags.splice(index, 1);
    renderTags();
-   performSearch();
+
+   if (tags.length === 0) {
+      showAllFruits();
+   } else {
+      performSearch();
+   }
 }
 
 function editTag(index) {
@@ -32,24 +62,28 @@ function editTag(index) {
    input.value = tagText;
    input.focus();
    renderTags();
+
+   if (tags.length === 0) {
+      showAllFruits();
+   }
 }
 
 function renderTags() {
    tagsContainer.innerHTML = '';
-   
+
    tags.forEach((tagText, index) => {
       const tag = document.createElement('div');
       tag.className = 'tag';
-      
+
       const span = document.createElement('span');
       span.textContent = tagText;
       span.ondblclick = () => editTag(index);
-      
+
       const removeBtn = document.createElement('button');
       removeBtn.className = 'tag-remove';
       removeBtn.innerHTML = '×';
       removeBtn.onclick = () => removeTag(index);
-      
+
       tag.appendChild(span);
       tag.appendChild(removeBtn);
       tagsContainer.appendChild(tag);
@@ -75,7 +109,7 @@ input.addEventListener("keydown", (e) => {
 input.addEventListener("input", () => {
    const q = input.value.trim();
    lastQuery = q;
-   
+
    if (tags.length === 0) {
       debounceSearch(q);
    }
@@ -150,7 +184,7 @@ function parseSearchTerms(text) {
    } else {
       mode = 'OR';
 
-      if (text.includes(':') || text.match(/starts\s+with/i)) {
+      if (text.includes(':')) {
          terms = [text];
       } else {
          terms = text.split(/\s+/).map(t => t.trim()).filter(t => t);
@@ -165,6 +199,70 @@ function parseSearchTerms(text) {
 
 function fruitMatchesTerm(fruit, term) {
    const trimmedTerm = term.trim();
+
+
+   const startsWithMatch = trimmedTerm.match(/^starts\s+with:\s*(.+)$/i);
+   if (startsWithMatch) {
+      const searchValue = startsWithMatch[1].trim().toLowerCase();
+      return (
+         fruit.name?.toLowerCase().startsWith(searchValue) ||
+         fruit.family?.toLowerCase().startsWith(searchValue) ||
+         fruit.order?.toLowerCase().startsWith(searchValue) ||
+         fruit.genus?.toLowerCase().startsWith(searchValue)
+      );
+   }
+
+   const endsWithMatch = trimmedTerm.match(/^ends\s+with:\s*(.+)$/i);
+   if (endsWithMatch) {
+      const searchValue = endsWithMatch[1].trim().toLowerCase();
+      return (
+         fruit.name?.toLowerCase().endsWith(searchValue) ||
+         fruit.family?.toLowerCase().endsWith(searchValue) ||
+         fruit.order?.toLowerCase().endsWith(searchValue) ||
+         fruit.genus?.toLowerCase().endsWith(searchValue)
+      );
+   }
+
+
+   const propStartsMatch = trimmedTerm.match(/^(\w+)\s*:\s*starts\s+with:\s*(.+)$/i);
+   if (propStartsMatch) {
+      const property = propStartsMatch[1].toLowerCase();
+      const searchValue = propStartsMatch[2].trim().toLowerCase();
+
+      let propValue = '';
+      if (property === 'name') {
+         propValue = fruit.name?.toLowerCase() || '';
+      } else if (property === 'family') {
+         propValue = fruit.family?.toLowerCase() || '';
+      } else if (property === 'order') {
+         propValue = fruit.order?.toLowerCase() || '';
+      } else if (property === 'genus') {
+         propValue = fruit.genus?.toLowerCase() || '';
+      }
+
+      return propValue.startsWith(searchValue);
+   }
+
+
+   const propEndsMatch = trimmedTerm.match(/^(\w+)\s*:\s*ends\s+with:\s*(.+)$/i);
+   if (propEndsMatch) {
+      const property = propEndsMatch[1].toLowerCase();
+      const searchValue = propEndsMatch[2].trim().toLowerCase();
+
+      let propValue = '';
+      if (property === 'name') {
+         propValue = fruit.name?.toLowerCase() || '';
+      } else if (property === 'family') {
+         propValue = fruit.family?.toLowerCase() || '';
+      } else if (property === 'order') {
+         propValue = fruit.order?.toLowerCase() || '';
+      } else if (property === 'genus') {
+         propValue = fruit.genus?.toLowerCase() || '';
+      }
+
+      return propValue.endsWith(searchValue);
+   }
+
 
    const propertyMatch = trimmedTerm.match(/^(\w+)\s*:\s*(.+)$/);
    if (propertyMatch) {
@@ -186,24 +284,7 @@ function fruitMatchesTerm(fruit, term) {
          propValue = fruit.genus?.toLowerCase() || '';
       }
 
-      const startsWithMatch = value.match(/^starts\s+with\s+(.+)$/i);
-      if (startsWithMatch) {
-         const searchValue = startsWithMatch[1].trim().toLowerCase();
-         return propValue.startsWith(searchValue);
-      }
-
       return propValue.includes(value.toLowerCase());
-   }
-
-   const startsWithMatch = trimmedTerm.match(/^starts\s+with\s+(.+)$/i);
-   if (startsWithMatch) {
-      const searchValue = startsWithMatch[1].trim().toLowerCase();
-      return (
-         fruit.name?.toLowerCase().startsWith(searchValue) ||
-         fruit.family?.toLowerCase().startsWith(searchValue) ||
-         fruit.order?.toLowerCase().startsWith(searchValue) ||
-         fruit.genus?.toLowerCase().startsWith(searchValue)
-      );
    }
 
    const search = trimmedTerm.toLowerCase();
@@ -236,16 +317,25 @@ function filterFruits(fruits, searchConfig) {
 
 function performSearch() {
    if (tags.length === 0) {
-      clearResult();
+      showAllFruits();
       return;
    }
-   
+
+   if (tags.length === 1) {
+      const singleTag = tags[0];
+      if (singleTag.includes('&&') || singleTag.includes('||')) {
+         const searchConfig = parseSearchTerms(singleTag);
+         searchFruitWithConfig(searchConfig);
+         return;
+      }
+   }
+
    let effectiveMode = 'OR';
    let searchTerms = [];
-   
+
    const hasAndOperator = tags.includes('&&');
    const hasOrOperator = tags.includes('||');
-   
+
    if (hasAndOperator) {
       effectiveMode = 'AND';
       searchTerms = tags.filter(tag => tag !== '&&');
@@ -256,17 +346,17 @@ function performSearch() {
       effectiveMode = 'OR';
       searchTerms = tags;
    }
-   
+
    if (searchTerms.length === 0) {
-      clearResult();
+      showAllFruits();
       return;
    }
-   
+
    const searchConfig = {
       mode: effectiveMode,
       terms: searchTerms
    };
-   
+
    searchFruitWithConfig(searchConfig);
 }
 
@@ -286,6 +376,8 @@ async function searchFruitWithConfig(searchConfig) {
          return;
       }
 
+      result.classList.add('grid-view');
+
       const fragment = document.createDocumentFragment();
       matches.forEach((fruit) => fragment.appendChild(renderFruitCard(fruit)));
       result.appendChild(fragment);
@@ -300,9 +392,12 @@ async function searchFruitWithConfig(searchConfig) {
 }
 
 async function searchFruit(text) {
-   clearResult();
+   if (!text) {
+      showAllFruits();
+      return;
+   }
 
-   if (!text) return;
+   clearResult();
 
    try {
       const fruits = await getAllFruits();
@@ -324,6 +419,9 @@ async function searchFruit(text) {
          result.appendChild(p);
          return;
       }
+
+
+      result.classList.add('grid-view');
 
       const fragment = document.createDocumentFragment();
       matches.forEach((fruit) => fragment.appendChild(renderFruitCard(fruit)));
