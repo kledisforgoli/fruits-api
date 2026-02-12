@@ -183,7 +183,7 @@ h1 {
 }
 
 #fruitResult::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-dark);
+  background: var(--scrollbar-hover);
 }
 
 .fruit-card {
