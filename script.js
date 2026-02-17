@@ -1,18 +1,196 @@
 const input = document.getElementById("fruitInput");
 const result = document.getElementById("fruitResult");
 const tagsContainer = document.getElementById("tagsContainer");
+const autocompleteDropdown = document.getElementById("autocompleteDropdown");
 
 const url = "https://fruityvice.com/api/fruit/all";
-const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
+const proxy = "https://corsproxy.io/?" + encodeURIComponent(url);
 
 let cachedFruits = null;
 let lastQuery = "";
 let tags = [];
+let selectedAutocompleteIndex = -1;
+let autocompleteItems = [];
 
+
+const propertyNames = [
+   { value: 'name', label: 'Name', icon: 'N' },
+   { value: 'family', label: 'Family', icon: 'F' },
+   { value: 'order', label: 'Order', icon: 'O' },
+   { value: 'genus', label: 'Genus', icon: 'G' },
+   { value: 'calories', label: 'Calories', icon: 'C' },
+   { value: 'sugar', label: 'Sugar', icon: 'S' },
+   { value: 'carbohydrates', label: 'Carbohydrates', icon: 'C' },
+   { value: 'protein', label: 'Protein', icon: 'P' },
+   { value: 'fat', label: 'Fat', icon: 'F' }
+];
+
+const numericProperties = ['calories', 'sugar', 'carbohydrates', 'protein', 'fat'];
+
+const modifiers = [
+   { value: 'starts with:', label: 'starts with:' },
+   { value: 'ends with:', label: 'ends with:' }
+];
+const numericModifiers = [
+   { value: '>=', label: '>=' },
+   { value: '<=', label: '<=' }
+];
 
 window.addEventListener('DOMContentLoaded', () => {
    showAllFruits();
 });
+
+
+document.addEventListener('click', (e) => {
+   if (!input.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
+      hideAutocomplete();
+   }
+});
+
+function hideAutocomplete() {
+   autocompleteDropdown.classList.remove('show');
+   autocompleteDropdown.innerHTML = '';
+   autocompleteItems = [];
+   selectedAutocompleteIndex = -1;
+}
+
+function showAutocomplete(items) {
+   autocompleteDropdown.innerHTML = '';
+   autocompleteItems = items;
+   selectedAutocompleteIndex = -1;
+
+   if (items.length === 0) {
+      hideAutocomplete();
+      return;
+   }
+
+   items.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = 'autocomplete-item';
+      div.dataset.index = index;
+
+      if (item.icon) {
+         const icon = document.createElement('div');
+         icon.className = 'autocomplete-item-icon';
+         icon.textContent = item.icon;
+         div.appendChild(icon);
+      }
+
+      const text = document.createElement('div');
+      text.className = 'autocomplete-item-text';
+      text.textContent = item.label;
+      div.appendChild(text);
+
+      div.addEventListener('click', () => selectAutocompleteItem(item));
+      div.addEventListener('mouseenter', () => {
+         selectedAutocompleteIndex = index;
+         updateAutocompleteSelection();
+      });
+
+      autocompleteDropdown.appendChild(div);
+   });
+
+   autocompleteDropdown.classList.add('show');
+}
+
+function updateAutocompleteSelection() {
+   const items = autocompleteDropdown.querySelectorAll('.autocomplete-item');
+   items.forEach((item, index) => {
+      if (index === selectedAutocompleteIndex) {
+         item.classList.add('active');
+      } else {
+         item.classList.remove('active');
+      }
+   });
+}
+
+function selectAutocompleteItem(item) {
+   const currentValue = input.value;
+
+   if (item.isProperty) {
+      input.value = item.value + ':';
+   }
+   else if (item.isModifier) {
+      const colonIndex = currentValue.lastIndexOf(':');
+      if (colonIndex !== -1) {
+         const beforeColon = currentValue.substring(0, colonIndex + 1);
+         input.value = beforeColon + ' ' + item.value + ' ';
+      } else {
+         input.value = item.value + ' ';
+      }
+   }
+   else if (item.isNumericModifier) {
+      const colonIndex = currentValue.lastIndexOf(':');
+      if (colonIndex !== -1) {
+         const beforeColon = currentValue.substring(0, colonIndex + 1);
+         input.value = beforeColon + ' ' + item.value + ' ';
+      } else {
+         input.value = item.value + ' ';
+      }
+   }
+
+   hideAutocomplete();
+   input.focus();
+}
+
+function getAutocompleteSuggestions(value) {
+   const trimmed = value.trim();
+
+   if (!trimmed) {
+      return propertyNames.map(p => ({ ...p, isProperty: true }));
+   }
+
+   const colonIndex = trimmed.indexOf(':');
+
+   if (colonIndex === -1) {
+      const filtered = propertyNames.filter(p =>
+         p.value.toLowerCase().startsWith(trimmed.toLowerCase()) ||
+         p.label.toLowerCase().startsWith(trimmed.toLowerCase())
+      );
+      return filtered.map(p => ({ ...p, isProperty: true }));
+   } else {
+      const beforeColon = trimmed.substring(0, colonIndex).trim();
+      const afterColon = trimmed.substring(colonIndex + 1).trim();
+
+      const matchedProperty = propertyNames.find(p =>
+         p.value.toLowerCase() === beforeColon.toLowerCase()
+      );
+
+      if (!matchedProperty) return [];
+
+      const isNumeric = numericProperties.includes(matchedProperty.value.toLowerCase());
+
+      const afterColonHasColon = afterColon.indexOf(':');
+      if (afterColonHasColon !== -1) return [];
+
+      if (!afterColon) {
+         if (isNumeric) {
+            return [
+               ...numericModifiers.map(m => ({ ...m, isNumericModifier: true })),
+               ...modifiers.map(m => ({ ...m, isModifier: true }))
+            ];
+         }
+         return modifiers.map(m => ({ ...m, isModifier: true }));
+      }
+      if (isNumeric) {
+         const allModifiers = [
+            ...numericModifiers.map(m => ({ ...m, isNumericModifier: true })),
+            ...modifiers.map(m => ({ ...m, isModifier: true }))
+         ];
+         const filtered = allModifiers.filter(m =>
+            m.value.toLowerCase().startsWith(afterColon.toLowerCase())
+         );
+         if (filtered.length === 0 && afterColon.length > 0) return [];
+         return filtered;
+      }
+
+      const filtered = modifiers.filter(m =>
+         m.value.toLowerCase().startsWith(afterColon.toLowerCase())
+      );
+      if (filtered.length === 0 && afterColon.length > 0) return [];
+      return filtered.map(m => ({ ...m, isModifier: true }));
+   }
+}
 
 async function showAllFruits() {
    clearResult();
@@ -91,12 +269,36 @@ function renderTags() {
 }
 
 input.addEventListener("keydown", (e) => {
+
+   if (autocompleteDropdown.classList.contains('show')) {
+      if (e.key === 'ArrowDown') {
+         e.preventDefault();
+         selectedAutocompleteIndex = Math.min(selectedAutocompleteIndex + 1, autocompleteItems.length - 1);
+         updateAutocompleteSelection();
+         return;
+      } else if (e.key === 'ArrowUp') {
+         e.preventDefault();
+         selectedAutocompleteIndex = Math.max(selectedAutocompleteIndex - 1, 0);
+         updateAutocompleteSelection();
+         return;
+      } else if (e.key === 'Enter' && selectedAutocompleteIndex >= 0) {
+         e.preventDefault();
+         selectAutocompleteItem(autocompleteItems[selectedAutocompleteIndex]);
+         return;
+      } else if (e.key === 'Escape') {
+         e.preventDefault();
+         hideAutocomplete();
+         return;
+      }
+   }
+
    if (e.key === 'Enter') {
       e.preventDefault();
       const value = input.value.trim();
       if (value) {
          addTag(value);
          input.value = '';
+         hideAutocomplete();
       }
    } else if (e.key === 'Backspace' && input.value === '' && tags.length > 0) {
       e.preventDefault();
@@ -107,15 +309,41 @@ input.addEventListener("keydown", (e) => {
 });
 
 input.addEventListener("input", () => {
-   const q = input.value.trim();
+   const q = input.value;
    lastQuery = q;
 
+   const suggestions = getAutocompleteSuggestions(q);
+   showAutocomplete(suggestions);
+
    if (tags.length === 0) {
-      debounceSearch(q);
+      debounceSearch(q.trim());
+   }
+});
+
+input.addEventListener("focus", () => {
+   const q = input.value;
+   const suggestions = getAutocompleteSuggestions(q);
+   if (suggestions.length > 0) {
+      showAutocomplete(suggestions);
    }
 });
 
 let t = null;
+
+function isSearchTermComplete(text) {
+   const trimmed = text.trim();
+   if (!trimmed) return false;
+
+   if (/^(\w+)\s*:\s*$/.test(trimmed)) return false;
+
+   if (/(?:starts\s+with|ends\s+with)\s*:\s*$/i.test(trimmed)) return false;
+
+   if (/^(\w+)\s*:\s*(?:starts\s+with|ends\s+with)\s*:\s*$/i.test(trimmed)) return false;
+   
+   if (/^(\w+)\s*:\s*(>=|<=)\s*$/.test(trimmed)) return false;
+
+   return true;
+}
 
 function debounceSearch(q) {
    clearTimeout(t);
@@ -126,10 +354,9 @@ async function getAllFruits() {
    if (cachedFruits) return cachedFruits;
 
    const response = await fetch(proxy);
-   if (!response.ok) throw new Error("Error");
+   if (!response.ok) throw new Error("Failed to fetch fruits");
 
-   const data = await response.json();
-   cachedFruits = JSON.parse(data.contents);
+   cachedFruits = await response.json();
    return cachedFruits;
 }
 
@@ -191,15 +418,31 @@ function parseSearchTerms(text) {
       }
    }
 
-   return {
-      mode,
-      terms
-   };
+   return { mode, terms };
 }
 
 function fruitMatchesTerm(fruit, term) {
    const trimmedTerm = term.trim();
 
+   // "calories: >= 50" ose "sugar: <= 10"
+   const numericCompareMatch = trimmedTerm.match(/^(\w+)\s*:\s*(>=|<=)\s*(\d+(\.\d+)?)$/i);
+   if (numericCompareMatch) {
+      const property = numericCompareMatch[1].toLowerCase();
+      const operator = numericCompareMatch[2];
+      const compareValue = parseFloat(numericCompareMatch[3]);
+
+      // Kontrollo nëse është pronë numerike
+      if (!numericProperties.includes(property)) return false;
+
+      const fruitValue = fruit.nutritions?.[property];
+      if (fruitValue === undefined || fruitValue === null) return false;
+
+      const numericFruitValue = parseFloat(fruitValue);
+      if (isNaN(numericFruitValue)) return false;
+
+      if (operator === '>=') return numericFruitValue >= compareValue;
+      if (operator === '<=') return numericFruitValue <= compareValue;
+   }
 
    const startsWithMatch = trimmedTerm.match(/^starts\s+with:\s*(.+)$/i);
    if (startsWithMatch) {
@@ -223,26 +466,19 @@ function fruitMatchesTerm(fruit, term) {
       );
    }
 
-
    const propStartsMatch = trimmedTerm.match(/^(\w+)\s*:\s*starts\s+with:\s*(.+)$/i);
    if (propStartsMatch) {
       const property = propStartsMatch[1].toLowerCase();
       const searchValue = propStartsMatch[2].trim().toLowerCase();
 
       let propValue = '';
-      if (property === 'name') {
-         propValue = fruit.name?.toLowerCase() || '';
-      } else if (property === 'family') {
-         propValue = fruit.family?.toLowerCase() || '';
-      } else if (property === 'order') {
-         propValue = fruit.order?.toLowerCase() || '';
-      } else if (property === 'genus') {
-         propValue = fruit.genus?.toLowerCase() || '';
-      }
+      if (property === 'name') propValue = fruit.name?.toLowerCase() || '';
+      else if (property === 'family') propValue = fruit.family?.toLowerCase() || '';
+      else if (property === 'order') propValue = fruit.order?.toLowerCase() || '';
+      else if (property === 'genus') propValue = fruit.genus?.toLowerCase() || '';
 
       return propValue.startsWith(searchValue);
    }
-
 
    const propEndsMatch = trimmedTerm.match(/^(\w+)\s*:\s*ends\s+with:\s*(.+)$/i);
    if (propEndsMatch) {
@@ -250,19 +486,13 @@ function fruitMatchesTerm(fruit, term) {
       const searchValue = propEndsMatch[2].trim().toLowerCase();
 
       let propValue = '';
-      if (property === 'name') {
-         propValue = fruit.name?.toLowerCase() || '';
-      } else if (property === 'family') {
-         propValue = fruit.family?.toLowerCase() || '';
-      } else if (property === 'order') {
-         propValue = fruit.order?.toLowerCase() || '';
-      } else if (property === 'genus') {
-         propValue = fruit.genus?.toLowerCase() || '';
-      }
+      if (property === 'name') propValue = fruit.name?.toLowerCase() || '';
+      else if (property === 'family') propValue = fruit.family?.toLowerCase() || '';
+      else if (property === 'order') propValue = fruit.order?.toLowerCase() || '';
+      else if (property === 'genus') propValue = fruit.genus?.toLowerCase() || '';
 
       return propValue.endsWith(searchValue);
    }
-
 
    const propertyMatch = trimmedTerm.match(/^(\w+)\s*:\s*(.+)$/);
    if (propertyMatch) {
@@ -270,19 +500,12 @@ function fruitMatchesTerm(fruit, term) {
       const value = propertyMatch[2].trim();
 
       let propValue = '';
-      if (property === 'calories' || property === 'sugar' ||
-         property === 'carbohydrates' || property === 'protein' ||
-         property === 'fat') {
+      if (numericProperties.includes(property)) {
          propValue = fruit.nutritions?.[property]?.toString().toLowerCase() || '';
-      } else if (property === 'name') {
-         propValue = fruit.name?.toLowerCase() || '';
-      } else if (property === 'family') {
-         propValue = fruit.family?.toLowerCase() || '';
-      } else if (property === 'order') {
-         propValue = fruit.order?.toLowerCase() || '';
-      } else if (property === 'genus') {
-         propValue = fruit.genus?.toLowerCase() || '';
-      }
+      } else if (property === 'name') propValue = fruit.name?.toLowerCase() || '';
+      else if (property === 'family') propValue = fruit.family?.toLowerCase() || '';
+      else if (property === 'order') propValue = fruit.order?.toLowerCase() || '';
+      else if (property === 'genus') propValue = fruit.genus?.toLowerCase() || '';
 
       return propValue.includes(value.toLowerCase());
    }
@@ -297,21 +520,14 @@ function fruitMatchesTerm(fruit, term) {
 }
 
 function filterFruits(fruits, searchConfig) {
-   const {
-      mode,
-      terms
-   } = searchConfig;
+   const { mode, terms } = searchConfig;
 
    if (terms.length === 0) return [];
 
    if (mode === 'AND') {
-      return fruits.filter(fruit => {
-         return terms.every(term => fruitMatchesTerm(fruit, term));
-      });
+      return fruits.filter(fruit => terms.every(term => fruitMatchesTerm(fruit, term)));
    } else {
-      return fruits.filter(fruit => {
-         return terms.some(term => fruitMatchesTerm(fruit, term));
-      });
+      return fruits.filter(fruit => terms.some(term => fruitMatchesTerm(fruit, term)));
    }
 }
 
@@ -352,11 +568,7 @@ function performSearch() {
       return;
    }
 
-   const searchConfig = {
-      mode: effectiveMode,
-      terms: searchTerms
-   };
-
+   const searchConfig = { mode: effectiveMode, terms: searchTerms };
    searchFruitWithConfig(searchConfig);
 }
 
@@ -392,7 +604,7 @@ async function searchFruitWithConfig(searchConfig) {
 }
 
 async function searchFruit(text) {
-   if (!text) {
+   if (!text || !isSearchTermComplete(text)) {
       showAllFruits();
       return;
    }
@@ -402,11 +614,8 @@ async function searchFruit(text) {
    try {
       const fruits = await getAllFruits();
 
-      if (tags.length > 0) {
-         return;
-      } else if (text !== lastQuery) {
-         return;
-      }
+      if (tags.length > 0) return;
+      else if (text !== lastQuery) return;
 
       const searchConfig = parseSearchTerms(text);
       const matches = filterFruits(fruits, searchConfig);
@@ -419,7 +628,6 @@ async function searchFruit(text) {
          result.appendChild(p);
          return;
       }
-
 
       result.classList.add('grid-view');
 

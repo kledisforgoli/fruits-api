@@ -54,6 +54,96 @@ h1 {
   margin-bottom: var(--spacing-xl);
 }
 
+.autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  border: var(--border-width-md) solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: var(--shadow-md);
+  display: none;
+  margin-top: var(--spacing-xxs);
+}
+
+.autocomplete-dropdown.show {
+  display: block;
+  animation: dropdownSlideIn var(--transition-fast) ease-out;
+}
+
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.autocomplete-item {
+  padding: var(--spacing-md) var(--spacing-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+  border-bottom: var(--border-width-sm) solid var(--background);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  color: var(--default-color);
+}
+
+.autocomplete-item-icon {
+  width: var(--spacing-lg);
+  height: var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--default-color);
+  color: var(--white-color);
+  border-radius: var(--radius-xs);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+.autocomplete-item-text {
+  flex: 1;
+  font-size: var(--font-base);
+}
+
+.autocomplete-dropdown::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-track {
+  background: var(--background);
+  border-radius: var(--radius-sm);
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb {
+  background: var(--default-color);
+  border-radius: var(--radius-sm);
+}
+
+.autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}
+
 .search-input-wrapper {
   position: relative;
   width: 100%;
@@ -119,8 +209,8 @@ h1 {
   font-size: var(--font-lg);
   line-height: 1;
   padding: 0;
-  width: 16px;
-  height: 16px;
+  width: var(--spacing-md);
+  height: var(--spacing-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -162,8 +252,8 @@ h1 {
 
 #fruitResult.grid-view {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-lg);
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-md);
 }
 
 #fruitResult::-webkit-scrollbar {
@@ -183,7 +273,7 @@ h1 {
 }
 
 #fruitResult::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-hover);
+  background: var(--hover-color);
 }
 
 .fruit-card {
